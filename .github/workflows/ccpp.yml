@@ -1,0 +1,49 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Windows
+
+# Controls when the action will run. Triggers the workflow on push or pull request 
+# events but only for the master branch
+on: 
+  release:
+    types: [published]
+  watch:
+    types: [started]
+  push:
+    branches:
+      - master
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+    
+    env:
+      MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Build command
+    - name: Build
+      shell: cmd
+      run: '"%MSBUILD_PATH%\MSBuild.exe" VAC-Bypass-Loader/VAC-Bypass-Loader.vcxproj /p:Platform=Win32 /p:Configuration=Release'
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v1-release
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: d:/a/VAC-Bypass-Loader/VAC-Bypass-Loader/VAC-Bypass-Loader/Release/VAC-Bypass-Loader.exe
+        tag: autobuild
+        overwrite: true
+        file_glob: true
+    - uses: ncipollo/release-action@v1
+      with:
+       bodyFile: "changelog.md"
+       tag: autobuild
+       allowUpdates: true
+       name: autobuild
+       token: ${{ secrets.GITHUB_TOKEN }}
